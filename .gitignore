@@ -12,3 +12,5 @@ Cargo.lock
 **/tmp/*.md
 **/tmp/dir/*.md
 **/fixtures/*.md
+
+output.md
