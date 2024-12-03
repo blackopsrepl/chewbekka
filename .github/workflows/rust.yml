@@ -19,7 +19,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: build_all_tools
       run: |
-        for DIR in */; do
+        for DIR in src; do
             DIRNAME=$(basename "$DIR")
             echo "==> $DIRNAME <=="
             (cd $DIR && cargo build --verbose)
