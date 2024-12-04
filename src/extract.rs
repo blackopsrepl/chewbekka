@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{self, BufReader, Read};
 use std::path::PathBuf;
+use std::sync::Mutex;
 
 /*
 Returns content of given file as a string.
@@ -39,12 +40,12 @@ If the directory cannot be read or if a file cannot be read, an `io::Error` is r
 fn extract_markdown_files_common(
     dir: &PathBuf,
     allow_recursion: bool,
-) -> io::Result<HashMap<String, String>> {
+) -> io::Result<Mutex<HashMap<String, String>>> {
     const MAX_FILE_SIZE: u64 = 10 * 1024 * 1024; // 10 MB
     const MAX_TOTAL_SIZE: u64 = 100 * 1024 * 1024; // 100 MB
 
     let mut total_size = 0u64;
-    let mut markdown_files = HashMap::new();
+    let markdown_files = std::sync::Mutex::new(HashMap::new());
 
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
@@ -53,13 +54,14 @@ fn extract_markdown_files_common(
         match (path.is_dir(), allow_recursion) {
             (true, true) => {
                 // Recursively extract files from the directory
-                let sub_files = extract_markdown_files_common(&path, true)?;
+                let sub_files = extract_markdown_files_common(&path, true)?.lock().unwrap().clone();
                 for (name, content) in sub_files {
                     let content_len = content.len() as u64;
                     if total_size + content_len > MAX_TOTAL_SIZE {
                         eprintln!("Reached total size limit. Stopping file processing.");
                         return Ok(markdown_files);
                     }
+                    let mut markdown_files = markdown_files.lock().unwrap();
                     markdown_files.insert(name, content);
                     total_size += content_len;
                 }
@@ -88,7 +90,8 @@ fn extract_markdown_files_common(
 
                         let file_name = path.file_name().unwrap().to_string_lossy().into_owned();
                         let content = read_file_content(&path)?;
-
+                        
+                        let mut markdown_files = markdown_files.lock().unwrap();
                         markdown_files.insert(file_name, content);
                         total_size += file_size;
                     }
@@ -100,11 +103,11 @@ fn extract_markdown_files_common(
     Ok(markdown_files)
 }
 
-pub fn extract_markdown_files_recursive(dir: &PathBuf) -> io::Result<HashMap<String, String>> {
+pub fn extract_markdown_files_recursive(dir: &PathBuf) -> io::Result<Mutex<HashMap<String, String>>> {
     extract_markdown_files_common(dir, true)
 }
 
-pub fn extract_markdown_files_non_recursive(dir: &PathBuf) -> io::Result<HashMap<String, String>> {
+pub fn extract_markdown_files_non_recursive(dir: &PathBuf) -> io::Result<Mutex<HashMap<String, String>>> {
     extract_markdown_files_common(dir, false)
 }
 
@@ -164,7 +167,7 @@ mod tests {
 
         // Test extraction of markdown files
         let result = extract_markdown_files_recursive(&test_path_buffer).unwrap();
-
+        let result = result.lock().unwrap().clone();
         // Check that we only have the two small files
         assert_eq!(result.len(), 3);
         assert!(result.contains_key("small.md"));
