@@ -35,7 +35,7 @@ async fn main() {
     let args: Opts = Opts::parse();
     match args.subcmd {
         SubCommand::Summarize(summarize_opts) => {
-            subcommand_summarize(summarize_opts);
+            subcommand_summarize(summarize_opts).await;
         }
     }
 }
