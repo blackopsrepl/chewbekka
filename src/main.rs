@@ -7,7 +7,7 @@ use chewbekka::summarize::summarize_content;
 
 #[derive(Parser)]
 #[command(
-    version = "0.2.3",
+    version = "0.2.4",
     author = "Vittorio Distefano",
     about = "summarizes markdown file(s) at given path"
 )]
