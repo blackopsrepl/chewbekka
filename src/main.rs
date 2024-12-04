@@ -7,7 +7,7 @@ use chewbekka::summarize::summarize_content;
 
 #[derive(Parser)]
 #[command(
-    version = "0.2.2",
+    version = "0.2.3",
     author = "Vittorio Distefano",
     about = "summarizes markdown file(s) at given path"
 )]
@@ -35,7 +35,7 @@ async fn main() {
     let args: Opts = Opts::parse();
     match args.subcmd {
         SubCommand::Summarize(summarize_opts) => {
-            subcommand_summarize(summarize_opts).await;
+            subcommand_summarize(summarize_opts);
         }
     }
 }
