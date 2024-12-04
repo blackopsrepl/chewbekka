@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{self, BufReader, Read};
 use std::path::PathBuf;
+use std::sync::Mutex;
 
 /*
 Returns content of given file as a string.
@@ -39,7 +40,7 @@ If the directory cannot be read or if a file cannot be read, an `io::Error` is r
 fn extract_markdown_files_common(
     dir: &PathBuf,
     allow_recursion: bool,
-) -> io::Result<HashMap<String, String>> {
+) -> io::Result<Mutex<HashMap<String, String>>> {
     const MAX_FILE_SIZE: u64 = 10 * 1024 * 1024; // 10 MB
     const MAX_TOTAL_SIZE: u64 = 100 * 1024 * 1024; // 100 MB
 
@@ -53,12 +54,12 @@ fn extract_markdown_files_common(
         match (path.is_dir(), allow_recursion) {
             (true, true) => {
                 // Recursively extract files from the directory
-                let sub_files = extract_markdown_files_common(&path, true)?;
+                let sub_files = extract_markdown_files_common(&path, true)?.lock().unwrap().clone();
                 for (name, content) in sub_files {
                     let content_len = content.len() as u64;
                     if total_size + content_len > MAX_TOTAL_SIZE {
                         eprintln!("Reached total size limit. Stopping file processing.");
-                        return Ok(markdown_files.into_inner().unwrap());
+                        return Ok(markdown_files);
                     }
                     let mut markdown_files = markdown_files.lock().unwrap();
                     markdown_files.insert(name, content);
@@ -84,7 +85,7 @@ fn extract_markdown_files_common(
 
                         if total_size + file_size > MAX_TOTAL_SIZE {
                             eprintln!("Reached total size limit. Stopping file processing.");
-                            return Ok(markdown_files.into_inner().unwrap());
+                            return Ok(markdown_files);
                         }
 
                         let file_name = path.file_name().unwrap().to_string_lossy().into_owned();
@@ -99,14 +100,14 @@ fn extract_markdown_files_common(
         }
     }
 
-    Ok(markdown_files.into_inner().unwrap())
+    Ok(markdown_files)
 }
 
-pub fn extract_markdown_files_recursive(dir: &PathBuf) -> io::Result<HashMap<String, String>> {
+pub fn extract_markdown_files_recursive(dir: &PathBuf) -> io::Result<Mutex<HashMap<String, String>>> {
     extract_markdown_files_common(dir, true)
 }
 
-pub fn extract_markdown_files_non_recursive(dir: &PathBuf) -> io::Result<HashMap<String, String>> {
+pub fn extract_markdown_files_non_recursive(dir: &PathBuf) -> io::Result<Mutex<HashMap<String, String>>> {
     extract_markdown_files_common(dir, false)
 }
 
