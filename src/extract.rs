@@ -167,7 +167,7 @@ mod tests {
 
         // Test extraction of markdown files
         let result = extract_markdown_files_recursive(&test_path_buffer).unwrap();
-
+        let result = result.lock().unwrap().clone();
         // Check that we only have the two small files
         assert_eq!(result.len(), 3);
         assert!(result.contains_key("small.md"));
