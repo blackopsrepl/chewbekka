@@ -44,7 +44,7 @@ fn extract_markdown_files_common(
     const MAX_TOTAL_SIZE: u64 = 100 * 1024 * 1024; // 100 MB
 
     let mut total_size = 0u64;
-    let mut markdown_files = HashMap::new();
+    let markdown_files = std::sync::Mutex::new(HashMap::new());
 
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
@@ -58,8 +58,9 @@ fn extract_markdown_files_common(
                     let content_len = content.len() as u64;
                     if total_size + content_len > MAX_TOTAL_SIZE {
                         eprintln!("Reached total size limit. Stopping file processing.");
-                        return Ok(markdown_files);
+                        return Ok(markdown_files.into_inner().unwrap());
                     }
+                    let mut markdown_files = markdown_files.lock().unwrap();
                     markdown_files.insert(name, content);
                     total_size += content_len;
                 }
@@ -83,12 +84,13 @@ fn extract_markdown_files_common(
 
                         if total_size + file_size > MAX_TOTAL_SIZE {
                             eprintln!("Reached total size limit. Stopping file processing.");
-                            return Ok(markdown_files);
+                            return Ok(markdown_files.into_inner().unwrap());
                         }
 
                         let file_name = path.file_name().unwrap().to_string_lossy().into_owned();
                         let content = read_file_content(&path)?;
-
+                        
+                        let mut markdown_files = markdown_files.lock().unwrap();
                         markdown_files.insert(file_name, content);
                         total_size += file_size;
                     }
@@ -97,7 +99,7 @@ fn extract_markdown_files_common(
         }
     }
 
-    Ok(markdown_files)
+    Ok(markdown_files.into_inner().unwrap())
 }
 
 pub fn extract_markdown_files_recursive(dir: &PathBuf) -> io::Result<HashMap<String, String>> {
