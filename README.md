@@ -47,20 +47,6 @@ chewbekka summarize <path>
 chewbekka summarize /path/to/markdown/files
 ```
 
-## Functionality Overview
-
-### `extract_markdown_files_recursive`
-
-This function extracts Markdown files recursively from a directory, returning a `HashMap` with file names as keys and their contents as values.
-
-### `extract_markdown_files_non_recursive`
-
-This function extracts Markdown files from a directory without recursion. It returns an error if a directory is found.
-
-### `read_file_content`
-
-Reads the content of a specified file and returns it as a string.
-
 ## Testing
 
 The program includes unit tests to ensure functionality. You can run the tests with:
