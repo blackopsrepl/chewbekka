@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ## Format all code directories in the repostitory using cargo fmt.
 
-for DIR in */; do
+for DIR in src; do
     DIRNAME=$(basename "$DIR")
     echo "==> $DIRNAME <=="
     (cd $DIR && cargo fmt -- )
