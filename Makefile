@@ -1,4 +1,5 @@
-install:
+
+update:
 	@echo "Updating rust toolchain"
 	rustup update stable
 	rustup default stable
@@ -10,6 +11,10 @@ rust-version:
 	rustfmt --version			#rust code formatter
 	rustup --version			#rust toolchain manager
 	clippy-driver --version		#rust linter 
+
+build:
+	@echo "Building all projects with cargo"
+	./util/build.sh
 
 format:
 	@echo "Formatting all projects with cargo"
