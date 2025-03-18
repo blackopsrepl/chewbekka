@@ -7,10 +7,19 @@ Chewbekka is a Rust utility that extracts and summarizes Markdown files from a s
 - Ollama
 
 ## Features
+- Summarize
+    - Recursively extract Markdown files from a specified directory
+    - Summarize each file
+    - Summarize all summaries
 
-- Recursively extract Markdown files from a specified directory.
-- Summarize each file
-- Summarize all summaries
+- Expand
+    - Recursively extract Markdown files from a specified directory, assuming they will be documentation for a due task
+    - Generate a task list for each file
+    - Summarize into on task list
+
+- Debloat
+    - Recursively extract Markdown files from a specified directory
+    - Detect subtleties and demistify corporate and marketing jargon
 
 ## Installation
 
