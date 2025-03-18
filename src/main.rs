@@ -8,9 +8,9 @@ use chewbekka::summarize::summarize_content;
 
 #[derive(Parser)]
 #[command(
-    version = "0.2.5",
+    version = "0.3.0",
     author = "Vittorio Distefano",
-    about = "summarizes markdown file(s) at given path"
+    about = "processes markdown file(s) at given path"
 )]
 struct Opts {
     #[clap(subcommand)]
@@ -23,11 +23,17 @@ enum SubCommand {
         name = "summarize",
         about = "summarizes markdown file(s) at given path"
     )]
-    Summarize(SummarizeOpts),
+    Summarize(MarkdownFileOpts),
+
+    #[clap(
+        name = "debloat",
+        about = "removes unnecessary lingo from markdown file(s) at given path"
+    )]
+    Debloat(MarkdownFileOpts),
 }
 
 #[derive(Parser)]
-struct SummarizeOpts {
+struct MarkdownFileOpts {
     markdown_files: PathBuf,
 }
 
@@ -37,11 +43,14 @@ async fn main() {
     match args.subcmd {
         SubCommand::Summarize(summarize_opts) => {
             subcommand_summarize(summarize_opts).await;
+        },
+        SubCommand::Debloat(debloat_opts) => {
+            subcommand_debloat(debloat_opts).await;
         }
     }
 }
 
-async fn subcommand_summarize(summarize_opts: SummarizeOpts) {
+async fn subcommand_summarize(summarize_opts: MarkdownFileOpts) {
 
     let markdown_files =
     extract_markdown_files_recursive(&summarize_opts.markdown_files).unwrap();
@@ -77,3 +86,7 @@ async fn subcommand_summarize(summarize_opts: SummarizeOpts) {
     // write summary to file
     std::fs::write(output_file, output).unwrap();
 }
+
+async fn subcommand_debloat(debloat_opts: MarkdownFileOpts) {
+}
+
