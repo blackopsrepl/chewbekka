@@ -4,7 +4,7 @@
 for DIR in src; do
     DIRNAME=$(basename "$DIR")
     echo "==> $DIRNAME <=="
-    (cd $DIR && cargo build)
+    (cd $DIR && cargo build --release)
 done
 
 echo "Build complete."
