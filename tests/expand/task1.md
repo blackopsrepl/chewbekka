@@ -1,0 +1,1 @@
+Create an RDS instance in an existing VPC. Point all existing webservers to this database backend. Create a VPN connection and allow direct access to the database from the public internet.
