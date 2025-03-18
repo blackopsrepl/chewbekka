@@ -12,7 +12,7 @@ use chewbekka::debloat::dissect_subtlety;
 
 #[derive(Parser)]
 #[command(
-    version = "0.3.0",
+    version = "1.1.0",
     author = "Vittorio Distefano",
     about = "processes markdown file(s) at given path"
 )]
