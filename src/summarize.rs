@@ -2,7 +2,7 @@ use crate::async_wrapper::chat_completion;
 
 pub async fn summarize_content(content: &str) -> String {
     let prompt = format!("Summarize the following text: {}", content);
-    let summarized_text = chat_completion("clio", &prompt, "user").await;
+    let summarized_text = chat_completion("chewbekka", &prompt, "user").await;
 
     match summarized_text {
         Ok(response) => {
