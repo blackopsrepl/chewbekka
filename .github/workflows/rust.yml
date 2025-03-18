@@ -22,5 +22,5 @@ jobs:
         for DIR in src; do
             DIRNAME=$(basename "$DIR")
             echo "==> $DIRNAME <=="
-            (cd $DIR && cargo build --verbose)
+            (cd $DIR && cargo build --verbose --release)
         done

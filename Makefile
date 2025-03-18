@@ -10,7 +10,7 @@ help:
 	@echo "  lint                 - Lint source code with cargo clippy"
 	@echo "  test                 - Test chewbekka with cargo test"
 	@echo "  alpha                - Generate changelog and create an alpha tag."
-	@echo "  beta                - Generate changelog and create an beta tag."
+	@echo "  beta                 - Generate changelog and create an beta tag."
 	@echo "  minor                - Generate changelog and create an minor tag."
 	@echo "  release              - Generate changelog and create a release tag."
 
@@ -30,7 +30,12 @@ rust-version:
 	clippy-driver --version		#rust linter
 
 install:
-	@echo "WIP"
+	@echo "Configuring ollama model"
+	ollama create chewbekka -f conf/chewbekka.prompt
+	@echo "Building all projects with cargo, in release mode"
+	./util/build-release.sh
+	@echo "Copying chewbekka binary to /usr/local/bin"
+	sudo cp target/release/chewbekka /usr/local/bin/
 
 build:
 	@echo "Building all projects with cargo"
