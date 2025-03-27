@@ -47,59 +47,75 @@ fn extract_markdown_files_common(
     let mut total_size = 0u64;
     let markdown_files = std::sync::Mutex::new(HashMap::new());
 
-    for entry in fs::read_dir(dir)? {
-        let entry = entry?;
-        let path = entry.path();
-
-        match (path.is_dir(), allow_recursion) {
-            (true, true) => {
-                // Recursively extract files from the directory
-                let sub_files = extract_markdown_files_common(&path, true)?.lock().unwrap().clone();
-                for (name, content) in sub_files {
-                    let content_len = content.len() as u64;
-                    if total_size + content_len > MAX_TOTAL_SIZE {
-                        eprintln!("Reached total size limit. Stopping file processing.");
-                        return Ok(markdown_files);
-                    }
+    if dir.is_file() {
+        if let Some(ext) = dir.extension() {
+            if ext == "md" {
+                let file_size = dir.metadata()?.len();
+                if file_size <= MAX_FILE_SIZE && file_size <= MAX_TOTAL_SIZE {
+                    let file_name = dir.file_name().unwrap().to_string_lossy().into_owned();
+                    let content = read_file_content(dir)?;
                     let mut markdown_files = markdown_files.lock().unwrap();
-                    markdown_files.insert(name, content);
-                    total_size += content_len;
+                    markdown_files.insert(file_name, content);
+                } else {
+                    eprintln!("Skipping large file: {:?} ({} bytes)", dir, file_size);
                 }
             }
-            (true, false) => {
-                // Stop processing if a directory is found and recursion is not allowed
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "Error: target is a directory, use recursion",
-                ));
-            }
-            (false, _) => {
-                if let Some(ext) = path.extension() {
-                    if ext == "md" {
-                        let file_size = entry.metadata()?.len();
-
-                        if file_size > MAX_FILE_SIZE {
-                            eprintln!("Skipping large file: {:?} ({} bytes)", path, file_size);
-                            continue;
-                        }
-
-                        if total_size + file_size > MAX_TOTAL_SIZE {
+        }
+    }
+    else  if dir.is_dir() {
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+    
+            match (path.is_dir(), allow_recursion) {
+                (true, true) => {
+                    // Recursively extract files from the directory
+                    let sub_files = extract_markdown_files_common(&path, true)?.lock().unwrap().clone();
+                    for (name, content) in sub_files {
+                        let content_len = content.len() as u64;
+                        if total_size + content_len > MAX_TOTAL_SIZE {
                             eprintln!("Reached total size limit. Stopping file processing.");
                             return Ok(markdown_files);
                         }
-
-                        let file_name = path.file_name().unwrap().to_string_lossy().into_owned();
-                        let content = read_file_content(&path)?;
-                        
                         let mut markdown_files = markdown_files.lock().unwrap();
-                        markdown_files.insert(file_name, content);
-                        total_size += file_size;
+                        markdown_files.insert(name, content);
+                        total_size += content_len;
+                    }
+                }
+                (true, false) => {
+                    // Stop processing if a directory is found and recursion is not allowed
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        "Error: target is a directory, use recursion",
+                    ));
+                }
+                (false, _) => {
+                    if let Some(ext) = path.extension() {
+                        if ext == "md" {
+                            let file_size = entry.metadata()?.len();
+    
+                            if file_size > MAX_FILE_SIZE {
+                                eprintln!("Skipping large file: {:?} ({} bytes)", path, file_size);
+                                continue;
+                            }
+    
+                            if total_size + file_size > MAX_TOTAL_SIZE {
+                                eprintln!("Reached total size limit. Stopping file processing.");
+                                return Ok(markdown_files);
+                            }
+    
+                            let file_name = path.file_name().unwrap().to_string_lossy().into_owned();
+                            let content = read_file_content(&path)?;
+                            
+                            let mut markdown_files = markdown_files.lock().unwrap();
+                            markdown_files.insert(file_name, content);
+                            total_size += file_size;
+                        }
                     }
                 }
             }
         }
     }
-
     Ok(markdown_files)
 }
 
