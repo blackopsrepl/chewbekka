@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-use chewbekka::debloat::dissect_subtlety;
+use chewbekka::debloat::debloat;
 use chewbekka::expand::expand;
 use chewbekka::extract::extract_markdown_files_recursive;
 use chewbekka::summarize::summarize_content;
@@ -123,16 +123,15 @@ async fn subcommand_expand(expand_opts: MarkdownFileOpts) {
 }
 
 async fn subcommand_debloat(debloat_opts: MarkdownFileOpts) {
-    // first dissect subtlety, then strip jargon, then summarize all
     let markdown_files = extract_markdown_files_recursive(&debloat_opts.markdown_files).unwrap();
 
     let debloated_files: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
 
     let markdown_files = markdown_files.lock().unwrap().clone();
     for (filename, content) in markdown_files.iter() {
-        let nojargon_text = dissect_subtlety(content);
-        let mut debloated_files= debloated_files.lock().unwrap().clone();
-        debloated_files.insert(filename.clone(), nojargon_text.await);
+        let nojargon_text = debloat(content).await;
+        let mut debloated_files= debloated_files.lock().unwrap();
+        debloated_files.insert(filename.clone(), nojargon_text);
     }
 
     let debloated_files = debloated_files.lock().unwrap();
