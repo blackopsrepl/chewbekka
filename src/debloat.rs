@@ -23,7 +23,10 @@ pub async fn dissect_subtlety(content: &str) -> String {
 }
 
 pub async fn strip_jargon(content: &str) -> String {
-    let prompt = format!("Rewrite without all vague, corporate, or inclusive terms. State facts only: {}", content);
+    let prompt = format!(
+        "Rewrite without all vague, corporate, or inclusive terms. State facts only: {}",
+        content
+    );
     let debloated_text = chat_completion("chewbekka", &prompt, "user").await;
 
     match debloated_text {
@@ -58,7 +61,7 @@ mod tests {
             "Expected output text to be different from the original content."
         );
     }
-    
+
     #[tokio::test]
     async fn test_strip_jargon() {
         let content = "Lorem ipsum dolor sit amet.";

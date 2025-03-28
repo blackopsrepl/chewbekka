@@ -156,7 +156,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_chat_completion() {
-        let _ = chat_completion("model_name", "Hello!", "user");
+        std::mem::drop(chat_completion("model_name", "Hello!", "user"));
     }
 
     #[test]
