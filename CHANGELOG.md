@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.3.0](///compare/v1.2.0...v1.3.0) (2025-03-28)
+
+
+### Features
+
+* **debloat:** Refactor dissect_subtlety function to debloat ff9c83e
+
+
+### Bug Fixes
+
+* fix test for chat_completion, fix mutex guard over await e25d32b
+
 ## [1.2.0](///compare/v1.1.0...v1.2.0) (2025-03-27)
 
 
