@@ -13,7 +13,7 @@ pub async fn write_md_file(output_files: &HashMap<String, String>, summmarize: b
         .cloned()
         .collect::<Vec<String>>()
         .join("\n\n");
-    
+
     let output_file = "output.md";
     if summmarize {
         let output = summarize_content(&concatenated_output).await;
