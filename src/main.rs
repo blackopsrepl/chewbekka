@@ -83,18 +83,7 @@ async fn subcommand_summarize(summarize_opts: MarkdownFileOpts) {
         );
     }
 
-    let concatenated_summary: String = summarized_files
-        .values()
-        .cloned()
-        .collect::<Vec<String>>()
-        .join("\n\n");
-
-    // summarize and write to an md file
-    let output_file = "output.md";
-    let output = summarize_content(&concatenated_summary).await;
-
-    // write summary to file
-    std::fs::write(output_file, output).unwrap();
+    write_md_file(&summarized_files, true).await;
 }
 
 async fn subcommand_expand(expand_opts: MarkdownFileOpts) {
@@ -108,18 +97,7 @@ async fn subcommand_expand(expand_opts: MarkdownFileOpts) {
         expanded_files.insert(filename.clone(), expanded_text);
     }
 
-    let concatenated_expanded: String = expanded_files
-        .values()
-        .cloned()
-        .collect::<Vec<String>>()
-        .join("\n\n");
-
-    // summarize and write to an md file
-    let output_file = "output.md";
-    let output = summarize_content(&concatenated_expanded).await;
-
-    // write summary to file
-    std::fs::write(output_file, output).unwrap();
+    write_md_file(&expanded_files, true).await;
 }
 
 async fn subcommand_debloat(debloat_opts: MarkdownFileOpts) {
@@ -142,16 +120,21 @@ async fn subcommand_debloat(debloat_opts: MarkdownFileOpts) {
         );
     }
 
-    let concatenated_debloated: String = debloated_files
+    write_md_file(&debloated_files, false).await;
+}
+
+async fn write_md_file(output_files: &HashMap<String, String>, summmarize: bool) {
+    let concatenated_output: String = output_files
         .values()
         .cloned()
         .collect::<Vec<String>>()
         .join("\n\n");
-
-    // summarize and write to an md file
+    
     let output_file = "output.md";
-    let output = &concatenated_debloated;
-
-    // write summary to file
-    std::fs::write(output_file, output).unwrap();
+    if summmarize {
+        let output = summarize_content(&concatenated_output).await;
+        std::fs::write(output_file, output).unwrap();
+    } else {
+        std::fs::write(output_file, &concatenated_output).unwrap();
+    }
 }
