@@ -65,6 +65,10 @@ minor:
 	@echo "Generating changelog and tag"
 	commit-and-tag-version --release-as minor
 
+patch:
+	@echo "Generating changelog and tag"
+	commit-and-tag-version --release-as patch
+
 release:
 	@echo "Generating changelog and tag"
 	commit-and-tag-version
