@@ -66,7 +66,6 @@ async fn main() {
 async fn subcommand_summarize(summarize_opts: MarkdownFileOpts) {
     let markdown_files = extract_markdown_files_recursive(&summarize_opts.markdown_files).unwrap();
 
-    // let mut summarized_files: HashMap<String, String> = HashMap::new();
     let summarized_files: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
 
     let markdown_files = markdown_files.lock().unwrap().clone();
@@ -96,6 +95,14 @@ async fn subcommand_expand(expand_opts: MarkdownFileOpts) {
     for (filename, content) in markdown_files.iter() {
         let expanded_text = expand(content).await;
         expanded_files.insert(filename.clone(), expanded_text);
+    }
+
+    let expanded_files = expanded_files.lock().unwrap().clone();
+    for (filename, expanded_content) in expanded_files.iter() {
+        println!(
+            "File: {}Expanded Content: {}",
+            filename, expanded_content
+        );
     }
 
     write_md_file(&expanded_files, true).await;
