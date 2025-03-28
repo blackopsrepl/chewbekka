@@ -11,7 +11,7 @@ use chewbekka::summarize::summarize_content;
 
 #[derive(Parser)]
 #[command(
-    version = "1.2.0",
+    version = "1.3.0",
     author = "Vittorio Distefano",
     about = "processes markdown file(s) at given path"
 )]
