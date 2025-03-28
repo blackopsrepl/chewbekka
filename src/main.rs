@@ -130,7 +130,7 @@ async fn subcommand_debloat(debloat_opts: MarkdownFileOpts) {
     let markdown_files = markdown_files.lock().unwrap().clone();
     for (filename, content) in markdown_files.iter() {
         let nojargon_text = debloat(content).await;
-        let mut debloated_files= debloated_files.lock().unwrap();
+        let mut debloated_files = debloated_files.lock().unwrap();
         debloated_files.insert(filename.clone(), nojargon_text);
     }
 
