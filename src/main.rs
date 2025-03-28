@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
+use chewbekka::write_md_file;
 use chewbekka::debloat::debloat;
 use chewbekka::expand::expand;
 use chewbekka::extract::extract_markdown_files_recursive;
@@ -112,7 +113,7 @@ async fn subcommand_debloat(debloat_opts: MarkdownFileOpts) {
         debloated_files.insert(filename.clone(), nojargon_text);
     }
 
-    let debloated_files = debloated_files.lock().unwrap();
+    let debloated_files = debloated_files.lock().unwrap().clone();
     for (filename, debloated_content) in debloated_files.iter() {
         println!(
             "File: {}\nDebloated Content: {}",
@@ -121,20 +122,4 @@ async fn subcommand_debloat(debloat_opts: MarkdownFileOpts) {
     }
 
     write_md_file(&debloated_files, false).await;
-}
-
-async fn write_md_file(output_files: &HashMap<String, String>, summmarize: bool) {
-    let concatenated_output: String = output_files
-        .values()
-        .cloned()
-        .collect::<Vec<String>>()
-        .join("\n\n");
-    
-    let output_file = "output.md";
-    if summmarize {
-        let output = summarize_content(&concatenated_output).await;
-        std::fs::write(output_file, output).unwrap();
-    } else {
-        std::fs::write(output_file, &concatenated_output).unwrap();
-    }
 }
