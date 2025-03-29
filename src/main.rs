@@ -8,17 +8,25 @@ use chewbekka::debloat::debloat;
 use chewbekka::expand::expand;
 use chewbekka::extract::extract_markdown_files_recursive;
 use chewbekka::summarize::summarize_content;
-use chewbekka::write_md_file;
+// use chewbekka::write_md_file;
 
 #[derive(Parser)]
 #[command(
-    version = "1.3.1",
+    version = "1.3.2",
     author = "Vittorio Distefano",
     about = "processes markdown file(s) at given path"
 )]
 struct Opts {
     #[clap(subcommand)]
     subcmd: SubCommand,
+
+    #[clap(
+        short,
+        long,
+        value_name = "FILE",
+        help = "Output file for processed markdown content"
+    )]
+    out: Option<PathBuf>,
 }
 
 #[derive(Parser)]
@@ -78,12 +86,16 @@ async fn subcommand_summarize(summarize_opts: MarkdownFileOpts) {
     let summarized_files = summarized_files.lock().unwrap().clone();
     for (filename, summarized_content) in summarized_files.iter() {
         println!(
-            "File: {}\nSummarized Content: {}",
+            "File:\n\n {}\n\n Summarized Content:\n\n {}",
             filename, summarized_content
         );
     }
 
-    write_md_file(&summarized_files, true).await;
+    // if summarized_files.len() == 1 {
+    //     write_md_file(&summarized_files, false).await;
+    // } else {
+    //     write_md_file(&summarized_files, true).await;
+    // }
 }
 
 async fn subcommand_expand(expand_opts: MarkdownFileOpts) {
@@ -100,10 +112,17 @@ async fn subcommand_expand(expand_opts: MarkdownFileOpts) {
 
     let expanded_files = expanded_files.lock().unwrap().clone();
     for (filename, expanded_content) in expanded_files.iter() {
-        println!("File: {}Expanded Content: {}", filename, expanded_content);
+        println!(
+            "File:\n\n {}\n\n Expanded Content:\n\n {}",
+            filename, expanded_content
+        );
     }
 
-    write_md_file(&expanded_files, true).await;
+    // if expanded_files.len() == 1 {
+    //     write_md_file(&expanded_files, false).await;
+    // } else {
+    //     write_md_file(&expanded_files, true).await;
+    // }
 }
 
 async fn subcommand_debloat(debloat_opts: MarkdownFileOpts) {
@@ -121,10 +140,14 @@ async fn subcommand_debloat(debloat_opts: MarkdownFileOpts) {
     let debloated_files = debloated_files.lock().unwrap().clone();
     for (filename, debloated_content) in debloated_files.iter() {
         println!(
-            "File: {}\nDebloated Content: {}",
+            "File:\n\n {}\n\n Debloated Content:\n\n {}",
             filename, debloated_content
         );
     }
 
-    write_md_file(&debloated_files, false).await;
+    // if debloated_files.len() == 1 {
+    //     write_md_file(&debloated_files, false).await;
+    // } else {
+    //     write_md_file(&debloated_files, true).await;
+    // }
 }

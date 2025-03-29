@@ -6,7 +6,7 @@ pub async fn debloat(content: &str) -> String {
 
     match debloated_text {
         Ok(response) => {
-            println!("Raw response: {:?}", response);
+            println!("Raw response:\n\n {:?}", response);
 
             if let Some(message) = response.get("message") {
                 if let Some(content) = message.get("content") {
@@ -18,7 +18,7 @@ pub async fn debloat(content: &str) -> String {
             }
             "No valid output in the response".to_string()
         }
-        Err(_) => "Error occurred during subtlety dissection process".to_string(),
+        Err(_) => "Error occurred during debloating process".to_string(),
     }
 }
 

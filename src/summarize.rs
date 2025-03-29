@@ -6,7 +6,7 @@ pub async fn summarize_content(content: &str) -> String {
 
     match summarized_text {
         Ok(response) => {
-            println!("Raw response: {:?}", response);
+            println!("Raw response:\n\n {:?}", response);
 
             if let Some(message) = response.get("message") {
                 if let Some(content) = message.get("content") {
@@ -18,7 +18,7 @@ pub async fn summarize_content(content: &str) -> String {
             }
             "No valid summary in the response".to_string()
         }
-        Err(_) => "Error occurred during summarization".to_string(),
+        Err(_) => "Error occurred during summarization process".to_string(),
     }
 }
 
