@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file. See [commit
 
 ## [1.3.2](///compare/v1.3.1...v1.3.2) (2025-03-29)
 
+
+### Features
+
+* Update version to 1.3.2 5f3c466
+
+## [1.3.2](///compare/v1.3.1...v1.3.2) (2025-03-29)
+
 ## [1.3.1](///compare/v1.3.0...v1.3.1) (2025-03-28)
 
 ## [1.3.0](///compare/v1.2.0...v1.3.0) (2025-03-28)
