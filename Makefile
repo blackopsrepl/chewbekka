@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-.PHONY: help config rust-version install build format lint test alpha beta minor release
+.PHONY: help config rust-version install build format lint test alpha beta minor patch release
 
 help:
 	@echo "Makefile Commands:"
@@ -11,7 +11,8 @@ help:
 	@echo "  test                 - Test chewbekka with cargo test"
 	@echo "  alpha                - Generate changelog and create an alpha tag."
 	@echo "  beta                 - Generate changelog and create an beta tag."
-	@echo "  minor                - Generate changelog and create an minor tag."
+	@echo "  minor                - Generate changelog and create a minor tag."
+	@echo "  patch                - Generate changelog and create a patch tag."
 	@echo "  release              - Generate changelog and create a release tag."
 
 all: format lint build test
