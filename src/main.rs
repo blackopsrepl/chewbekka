@@ -4,29 +4,20 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-use chewbekka::debloat::debloat;
-use chewbekka::expand::expand;
 use chewbekka::extract::extract_markdown_files_recursive;
-use chewbekka::summarize::summarize_content;
-// use chewbekka::write_md_file;
+
+use chewbekka::process_content;
+use chewbekka::write_md_file;
 
 #[derive(Parser)]
 #[command(
-    version = "1.3.2",
+    version = "1.3.3",
     author = "Vittorio Distefano",
     about = "processes markdown file(s) at given path"
 )]
 struct Opts {
     #[clap(subcommand)]
     subcmd: SubCommand,
-
-    #[clap(
-        short,
-        long,
-        value_name = "FILE",
-        help = "Output file for processed markdown content"
-    )]
-    out: Option<PathBuf>,
 }
 
 #[derive(Parser)]
@@ -74,55 +65,39 @@ async fn main() {
 async fn subcommand_summarize(summarize_opts: MarkdownFileOpts) {
     let markdown_files = extract_markdown_files_recursive(&summarize_opts.markdown_files).unwrap();
 
+    // let mut summarized_files: HashMap<String, String> = HashMap::new();
     let summarized_files: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
 
     let markdown_files = markdown_files.lock().unwrap().clone();
     for (filename, content) in markdown_files.iter() {
-        let summarized_text = summarize_content(content);
+        let summarized_text = process_content(content, "summarize").await;
         let mut summarized_files = summarized_files.lock().unwrap().clone();
-        summarized_files.insert(filename.clone(), summarized_text.await);
+        summarized_files.insert(filename.clone(), summarized_text);
     }
 
     let summarized_files = summarized_files.lock().unwrap().clone();
     for (filename, summarized_content) in summarized_files.iter() {
         println!(
-            "File:\n\n {}\n\n Summarized Content:\n\n {}",
+            "File: {}\nSummarized Content: {}",
             filename, summarized_content
         );
     }
 
-    // if summarized_files.len() == 1 {
-    //     write_md_file(&summarized_files, false).await;
-    // } else {
-    //     write_md_file(&summarized_files, true).await;
-    // }
+    write_md_file(&summarized_files, true).await;
 }
 
 async fn subcommand_expand(expand_opts: MarkdownFileOpts) {
     let markdown_files = extract_markdown_files_recursive(&expand_opts.markdown_files).unwrap();
 
-    let expanded_files: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
+    let mut expanded_files: HashMap<String, String> = HashMap::new();
 
     let markdown_files = markdown_files.lock().unwrap().clone();
     for (filename, content) in markdown_files.iter() {
-        let expanded_text = expand(content);
-        let mut expanded_files = expanded_files.lock().unwrap().clone();
-        expanded_files.insert(filename.clone(), expanded_text.await);
+        let expanded_text = process_content(content, "expand").await;
+        expanded_files.insert(filename.clone(), expanded_text);
     }
 
-    let expanded_files = expanded_files.lock().unwrap().clone();
-    for (filename, expanded_content) in expanded_files.iter() {
-        println!(
-            "File:\n\n {}\n\n Expanded Content:\n\n {}",
-            filename, expanded_content
-        );
-    }
-
-    // if expanded_files.len() == 1 {
-    //     write_md_file(&expanded_files, false).await;
-    // } else {
-    //     write_md_file(&expanded_files, true).await;
-    // }
+    write_md_file(&expanded_files, true).await;
 }
 
 async fn subcommand_debloat(debloat_opts: MarkdownFileOpts) {
@@ -132,7 +107,7 @@ async fn subcommand_debloat(debloat_opts: MarkdownFileOpts) {
 
     let markdown_files = markdown_files.lock().unwrap().clone();
     for (filename, content) in markdown_files.iter() {
-        let nojargon_text = debloat(content).await;
+        let nojargon_text = process_content(content, "debloat").await;
         let mut debloated_files = debloated_files.lock().unwrap();
         debloated_files.insert(filename.clone(), nojargon_text);
     }
@@ -140,14 +115,10 @@ async fn subcommand_debloat(debloat_opts: MarkdownFileOpts) {
     let debloated_files = debloated_files.lock().unwrap().clone();
     for (filename, debloated_content) in debloated_files.iter() {
         println!(
-            "File:\n\n {}\n\n Debloated Content:\n\n {}",
+            "File: {}\nDebloated Content: {}",
             filename, debloated_content
         );
     }
 
-    // if debloated_files.len() == 1 {
-    //     write_md_file(&debloated_files, false).await;
-    // } else {
-    //     write_md_file(&debloated_files, true).await;
-    // }
+    write_md_file(&debloated_files, false).await;
 }
