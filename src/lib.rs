@@ -14,7 +14,7 @@ pub async fn write_md_file(output_files: &HashMap<String, String>, summmarize: b
 
     // TODO: pass filename as argument
     let output_file = "output.md";
-    
+
     // summarization across the entire array vs simple concatenation
     if summmarize {
         let output = process_content(&concatenated_output, "summarize").await;
@@ -59,7 +59,6 @@ pub async fn process_content(content: &str, task: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio;
 
     #[tokio::test]
     async fn test_summarize_content() {

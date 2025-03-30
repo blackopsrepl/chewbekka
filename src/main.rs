@@ -11,7 +11,7 @@ use chewbekka::write_md_file;
 
 #[derive(Parser)]
 #[command(
-    version = "1.3.0",
+    version = "1.3.3",
     author = "Vittorio Distefano",
     about = "processes markdown file(s) at given path"
 )]
