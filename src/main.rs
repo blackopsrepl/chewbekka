@@ -4,14 +4,14 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-use chewbekka::extract::extract_markdown_files_recursive;
+use chewbekka::extract::extract_files_recursive;
 
 use chewbekka::process_content;
 use chewbekka::write_md_file;
 
 #[derive(Parser)]
 #[command(
-    version = "1.3.3",
+    version = "1.3.5",
     author = "Vittorio Distefano",
     about = "processes markdown file(s) at given path"
 )]
@@ -26,24 +26,26 @@ enum SubCommand {
         name = "summarize",
         about = "summarizes markdown file(s) at given path"
     )]
-    Summarize(MarkdownFileOpts),
+    Summarize(SubcommandOpts),
 
     #[clap(
         name = "expand",
         about = "analyzes all markdown file(s) at a given path as documentation for a task and generates a list of subtasks to be completed"
     )]
-    Expand(MarkdownFileOpts),
+    Expand(SubcommandOpts),
 
     #[clap(
         name = "debloat",
         about = "removes unnecessary lingo from markdown file(s) at given path"
     )]
-    Debloat(MarkdownFileOpts),
+    Debloat(SubcommandOpts),
 }
 
 #[derive(Parser)]
-struct MarkdownFileOpts {
+struct SubcommandOpts {
     markdown_files: PathBuf,
+    #[clap(long, required = false, help = "output markdown file path")]
+    output_markdown: PathBuf,
 }
 
 #[tokio::main]
@@ -62,63 +64,46 @@ async fn main() {
     }
 }
 
-async fn subcommand_summarize(summarize_opts: MarkdownFileOpts) {
-    let markdown_files = extract_markdown_files_recursive(&summarize_opts.markdown_files).unwrap();
+async fn subcommand_summarize(subcommand_opts: SubcommandOpts) {
+    subcommand_handler(subcommand_opts, "summarize", &vec!["md", "txt"], true).await;
+}
 
-    // let mut summarized_files: HashMap<String, String> = HashMap::new();
-    let summarized_files: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
+async fn subcommand_expand(subcommand_opts: SubcommandOpts) {
+    subcommand_handler(subcommand_opts, "expand", &vec!["md", "txt"], false).await;
+}
 
-    let markdown_files = markdown_files.lock().unwrap().clone();
-    for (filename, content) in markdown_files.iter() {
-        let summarized_text = process_content(content, "summarize").await;
-        let mut summarized_files = summarized_files.lock().unwrap().clone();
-        summarized_files.insert(filename.clone(), summarized_text);
+async fn subcommand_debloat(subcommand_opts: SubcommandOpts) {
+    subcommand_handler(subcommand_opts, "debloat", &vec!["md", "txt"], false).await;
+}
+
+async fn subcommand_handler(subcommand_opts: SubcommandOpts, task: &str, extensions: &Vec<&str>, summarize: bool) {
+    let input_files = extract_files_recursive(&subcommand_opts.markdown_files, extensions).unwrap();
+
+    let processed_files = Mutex::new(HashMap::new());
+
+    let input_files = input_files.lock().unwrap().clone();
+    
+    for (filename, content) in input_files.iter() {
+        let processed_text = process_content(content, task).await;
+        let mut processed_files = processed_files.lock().unwrap();
+        processed_files.insert(filename.clone(), processed_text);
     }
 
-    let summarized_files = summarized_files.lock().unwrap().clone();
-    for (filename, summarized_content) in summarized_files.iter() {
+    let processed_files = processed_files.lock().unwrap().clone();
+    for (filename, processed_content) in processed_files.iter() {
         println!(
-            "File: {}\nSummarized Content: {}",
-            filename, summarized_content
+            "File: {}\n\nProcessed Content: {}\n\n",
+            filename, processed_content
         );
     }
 
-    write_md_file(&summarized_files, true).await;
-}
-
-async fn subcommand_expand(expand_opts: MarkdownFileOpts) {
-    let markdown_files = extract_markdown_files_recursive(&expand_opts.markdown_files).unwrap();
-
-    let mut expanded_files: HashMap<String, String> = HashMap::new();
-
-    let markdown_files = markdown_files.lock().unwrap().clone();
-    for (filename, content) in markdown_files.iter() {
-        let expanded_text = process_content(content, "expand").await;
-        expanded_files.insert(filename.clone(), expanded_text);
+    if subcommand_opts.output_markdown.exists() {
+        write_md_file(
+            &processed_files,
+            &subcommand_opts.output_markdown,
+            // TODO: refactor summarization to post_tasks system
+            summarize,
+        )
+        .await;
     }
-
-    write_md_file(&expanded_files, true).await;
-}
-
-async fn subcommand_debloat(debloat_opts: MarkdownFileOpts) {
-    let markdown_files = extract_markdown_files_recursive(&debloat_opts.markdown_files).unwrap();
-
-    let debloated_files: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
-
-    let markdown_files = markdown_files.lock().unwrap().clone();
-    for (filename, content) in markdown_files.iter() {
-        let nojargon_text = process_content(content, "debloat").await;
-        let mut debloated_files = debloated_files.lock().unwrap();
-        debloated_files.insert(filename.clone(), nojargon_text);
-    }
-
-    let debloated_files = debloated_files.lock().unwrap().clone();
-    for (filename, debloated_content) in debloated_files.iter() {
-        println!(
-            "File: {}\nDebloated Content: {}",
-            filename, debloated_content
-        );
-    }
-
-    write_md_file(&debloated_files, false).await;
 }
