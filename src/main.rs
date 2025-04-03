@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-use chewbekka::extract::extract_markdown_files_recursive;
+use chewbekka::extract::extract_files_recursive;
 
 use chewbekka::process_content;
 use chewbekka::write_md_file;
@@ -65,23 +65,24 @@ async fn main() {
 }
 
 async fn subcommand_summarize(subcommand_opts: SubcommandOpts) {
-    subcommand_handler(subcommand_opts, "summarize", true).await;
+    subcommand_handler(subcommand_opts, "summarize", &vec!["md", "txt"], true).await;
 }
 
 async fn subcommand_expand(subcommand_opts: SubcommandOpts) {
-    subcommand_handler(subcommand_opts, "expand", false).await;
+    subcommand_handler(subcommand_opts, "expand", &vec!["md", "txt"], false).await;
 }
 
 async fn subcommand_debloat(subcommand_opts: SubcommandOpts) {
-    subcommand_handler(subcommand_opts, "debloat", false).await;
+    subcommand_handler(subcommand_opts, "debloat", &vec!["md", "txt"], false).await;
 }
 
-async fn subcommand_handler(subcommand_opts: SubcommandOpts, task: &str, summarize: bool) {
-    let input_files = extract_markdown_files_recursive(&subcommand_opts.markdown_files).unwrap();
+async fn subcommand_handler(subcommand_opts: SubcommandOpts, task: &str, extensions: &Vec<&str>, summarize: bool) {
+    let input_files = extract_files_recursive(&subcommand_opts.markdown_files, extensions).unwrap();
 
     let processed_files = Mutex::new(HashMap::new());
 
     let input_files = input_files.lock().unwrap().clone();
+    
     for (filename, content) in input_files.iter() {
         let processed_text = process_content(content, task).await;
         let mut processed_files = processed_files.lock().unwrap();
@@ -100,6 +101,7 @@ async fn subcommand_handler(subcommand_opts: SubcommandOpts, task: &str, summari
         write_md_file(
             &processed_files,
             &subcommand_opts.output_markdown,
+            // TODO: refactor summarization to post_tasks system
             summarize,
         )
         .await;

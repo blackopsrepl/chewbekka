@@ -37,8 +37,9 @@ A `HashMap` containing the file names as keys and the file contents as values.
 If the directory cannot be read or if a file cannot be read, an `io::Error` is returned.
 */
 
-fn extract_markdown_files_common(
+fn extract_files_common(
     dir: &PathBuf,
+    extensions: &Vec<&str>,
     allow_recursion: bool,
 ) -> io::Result<Mutex<HashMap<String, String>>> {
     const MAX_FILE_SIZE: u64 = 10 * 1024 * 1024; // 10 MB
@@ -49,7 +50,7 @@ fn extract_markdown_files_common(
 
     if dir.is_file() {
         if let Some(ext) = dir.extension() {
-            if ext == "md" {
+            if extensions.contains(&ext.to_str().unwrap()) {
                 let file_size = dir.metadata()?.len();
                 if file_size <= MAX_FILE_SIZE {
                     let file_name = dir.file_name().unwrap().to_string_lossy().into_owned();
@@ -69,16 +70,18 @@ fn extract_markdown_files_common(
             match (path.is_dir(), allow_recursion) {
                 (true, true) => {
                     // Recursively extract files from the directory
-                    let sub_files = extract_markdown_files_common(&path, true)?
+                    let sub_files = extract_files_common(&path, extensions, true)?
                         .lock()
                         .unwrap()
                         .clone();
+
                     for (name, content) in sub_files {
                         let content_len = content.len() as u64;
                         if total_size + content_len > MAX_TOTAL_SIZE {
                             eprintln!("Reached total size limit. Stopping file processing.");
                             return Ok(markdown_files);
                         }
+
                         let mut markdown_files = markdown_files.lock().unwrap();
                         markdown_files.insert(name, content);
                         total_size += content_len;
@@ -122,16 +125,18 @@ fn extract_markdown_files_common(
     Ok(markdown_files)
 }
 
-pub fn extract_markdown_files_recursive(
+pub fn extract_files_recursive(
     dir: &PathBuf,
+    extensions: &Vec<&str>
 ) -> io::Result<Mutex<HashMap<String, String>>> {
-    extract_markdown_files_common(dir, true)
+    extract_files_common(dir, extensions, true)
 }
 
-pub fn extract_markdown_files_non_recursive(
+pub fn extract_files_non_recursive(
     dir: &PathBuf,
+    extensions: &Vec<&str>
 ) -> io::Result<Mutex<HashMap<String, String>>> {
-    extract_markdown_files_common(dir, false)
+    extract_files_common(dir, extensions, false)
 }
 
 #[cfg(test)]
@@ -187,9 +192,10 @@ mod tests {
     fn test_extract_markdown_files() {
         // Create path buffer
         let test_path_buffer = setup_test_path_buffer();
+        let extensions = &vec!["md"];
 
         // Test extraction of markdown files
-        let result = extract_markdown_files_recursive(&test_path_buffer).unwrap();
+        let result = extract_files_recursive(&test_path_buffer, extensions).unwrap();
         let result = result.lock().unwrap().clone();
 
         // Check that we only have the two small files
@@ -204,9 +210,10 @@ mod tests {
     fn test_extract_markdown_files_non_recursive_error() {
         // Create path buffer
         let test_path_buffer = setup_test_path_buffer();
+        let extensions = &vec!["md"];
 
         // Test non-recursive extraction of markdown files, with a directory as target
-        let result = extract_markdown_files_non_recursive(&test_path_buffer).unwrap_err();
+        let result = extract_files_non_recursive(&test_path_buffer, extensions).unwrap_err();
 
         // Check the output for the error message
         assert_eq!(
