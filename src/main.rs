@@ -53,27 +53,15 @@ async fn main() {
     let args: Opts = Opts::parse();
     match args.subcmd {
         SubCommand::Summarize(summarize_opts) => {
-            subcommand_summarize(summarize_opts).await;
+            subcommand_handler(summarize_opts, "summarize", &vec!["md", "txt"], true).await;
         }
         SubCommand::Expand(expand_opts) => {
-            subcommand_expand(expand_opts).await;
+            subcommand_handler(expand_opts, "expand", &vec!["md", "txt"], false).await;
         }
         SubCommand::Debloat(debloat_opts) => {
-            subcommand_debloat(debloat_opts).await;
+            subcommand_handler(debloat_opts, "debloat", &vec!["md", "txt"], false).await;
         }
     }
-}
-
-async fn subcommand_summarize(subcommand_opts: SubcommandOpts) {
-    subcommand_handler(subcommand_opts, "summarize", &vec!["md", "txt"], true).await;
-}
-
-async fn subcommand_expand(subcommand_opts: SubcommandOpts) {
-    subcommand_handler(subcommand_opts, "expand", &vec!["md", "txt"], false).await;
-}
-
-async fn subcommand_debloat(subcommand_opts: SubcommandOpts) {
-    subcommand_handler(subcommand_opts, "debloat", &vec!["md", "txt"], false).await;
 }
 
 async fn subcommand_handler(subcommand_opts: SubcommandOpts, task: &str, extensions: &Vec<&str>, summarize: bool) {
