@@ -2,20 +2,21 @@ pub mod async_wrapper;
 pub mod extract;
 pub mod prompts;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, path::PathBuf};
 
 use async_wrapper::chat_completion;
 use prompts::get_prompt;
 
-pub async fn write_md_file(output_files: &HashMap<String, String>, summmarize: bool) {
-    let concatenated_output: String = output_files
+pub async fn write_md_file(
+    input_files: &HashMap<String, String>,
+    output_file: &PathBuf,
+    summmarize: bool,
+) {
+    let concatenated_output: String = input_files
         .values()
         .cloned()
         .collect::<Vec<String>>()
         .join("\n\n");
-
-    // TODO: pass filename as argument
-    let output_file = "output.md";
 
     // summarization across the entire array vs simple concatenation
     if summmarize {
