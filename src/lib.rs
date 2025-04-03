@@ -56,7 +56,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_summarize_content() {
-        let content = "Lorem ipsum dolor sit amet.";
+        let content = "This is a test content, from a diverse, inclusive and demure source. We are sorry, but we decided to proceed with another candidate that is the perfect culture fit.";
         let result = process_content(content, "summarize").await;
         println!("\n\nResult:\n\n {:?}", result);
         assert_ne!(
@@ -67,7 +67,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_debloat_content() {
-        let content = "Lorem ipsum dolor sit amet.";
+        let content = "This is a test content, from a diverse, inclusive and demure source. We are sorry, but we decided to proceed with another candidate that is the perfect culture fit.";
         let result = process_content(content, "debloat").await;
         println!("\n\nResult:\n\n {:?}", result);
         assert_ne!(
