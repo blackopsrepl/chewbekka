@@ -1,19 +1,22 @@
 pub mod async_wrapper;
 pub mod extract;
+pub mod prompts;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, path::PathBuf};
 
 use async_wrapper::chat_completion;
+use prompts::get_prompt;
 
-pub async fn write_md_file(output_files: &HashMap<String, String>, summmarize: bool) {
-    let concatenated_output: String = output_files
+pub async fn write_md_file(
+    input_files: &HashMap<String, String>,
+    output_file: &PathBuf,
+    summmarize: bool,
+) {
+    let concatenated_output: String = input_files
         .values()
         .cloned()
         .collect::<Vec<String>>()
         .join("\n\n");
-
-    // TODO: pass filename as argument
-    let output_file = "output.md";
 
     // summarization across the entire array vs simple concatenation
     if summmarize {
@@ -25,16 +28,7 @@ pub async fn write_md_file(output_files: &HashMap<String, String>, summmarize: b
 }
 
 pub async fn process_content(content: &str, task: &str) -> String {
-    let debloat = format!("Read the given text and scrub it of all inclusive, woke, or corporate buzzwords—stuff like 'inclusivity,' 'stakeholder engagement,' 'building a better tomorrow,' or any other sanitized nonsense. Then, rephrase it in a stark, unfiltered, and cynically realistic way. Assume everyone involved is motivated by self-interest, power, or survival, not noble ideals. Ditch the optimism and platitudes, and tell it like it is with a sharp, no-holds-barred edge. Get to the core of what’s really being said, even if it’s ugly or inconvenient.: {}", content);
-    let expand = format!("Generate a task list from this document: {}", content);
-    let summarize = format!("Summarize the following text: {}", content);
-
-    let prompt = match task {
-        "debloat" => debloat,
-        "expand" => expand,
-        "summarize" => summarize,
-        _ => "Invalid task".to_string(),
-    };
+    let prompt = get_prompt(task, content);
 
     let debloated_text = chat_completion("chewbekka", &prompt, "user").await;
 
@@ -62,7 +56,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_summarize_content() {
-        let content = "Lorem ipsum dolor sit amet.";
+        let content = "This is a test content, from a diverse, inclusive and demure source. We are sorry, but we decided to proceed with another candidate that is the perfect culture fit.";
         let result = process_content(content, "summarize").await;
         println!("\n\nResult:\n\n {:?}", result);
         assert_ne!(
@@ -73,7 +67,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_debloat_content() {
-        let content = "Lorem ipsum dolor sit amet.";
+        let content = "This is a test content, from a diverse, inclusive and demure source. We are sorry, but we decided to proceed with another candidate that is the perfect culture fit.";
         let result = process_content(content, "debloat").await;
         println!("\n\nResult:\n\n {:?}", result);
         assert_ne!(
