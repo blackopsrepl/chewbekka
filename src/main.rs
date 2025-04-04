@@ -13,7 +13,7 @@ use chewbekka::write_md_file;
 #[command(
     version = "1.3.5",
     author = "Vittorio Distefano",
-    about = "processes markdown file(s) at given path"
+    about = "processes text file(s) at given path"
 )]
 struct Opts {
     #[clap(subcommand)]
@@ -24,21 +24,27 @@ struct Opts {
 enum SubCommand {
     #[clap(
         name = "summarize",
-        about = "summarizes markdown file(s) at given path"
+        about = "summarizes text file(s) at given path"
     )]
     Summarize(SubcommandOpts),
 
     #[clap(
         name = "expand",
-        about = "analyzes all markdown file(s) at a given path as documentation for a task and generates a list of subtasks to be completed"
+        about = "analyzes all text file(s) at a given path as documentation for a task and generates a list of subtasks to be completed"
     )]
     Expand(SubcommandOpts),
 
     #[clap(
         name = "debloat",
-        about = "removes unnecessary lingo from markdown file(s) at given path"
+        about = "removes unnecessary lingo from text file(s) at given path"
     )]
     Debloat(SubcommandOpts),
+
+    #[clap(
+        name = "docugen",
+        about = "generates documentation for a codebase"
+    )]
+    Docugen(SubcommandOpts),
 }
 
 #[derive(Parser)]
@@ -53,27 +59,18 @@ async fn main() {
     let args: Opts = Opts::parse();
     match args.subcmd {
         SubCommand::Summarize(summarize_opts) => {
-            subcommand_summarize(summarize_opts).await;
+            subcommand_handler(summarize_opts, "summarize", &vec!["md", "txt"], true).await;
         }
         SubCommand::Expand(expand_opts) => {
-            subcommand_expand(expand_opts).await;
+            subcommand_handler(expand_opts, "expand", &vec!["md", "txt"], false).await;
         }
         SubCommand::Debloat(debloat_opts) => {
-            subcommand_debloat(debloat_opts).await;
+            subcommand_handler(debloat_opts, "debloat", &vec!["md", "txt"], false).await;
+        }
+        SubCommand::Docugen(docugen_opts) => {
+            subcommand_handler(docugen_opts, "docugen", &vec!["rs", "go", "py"], false).await;
         }
     }
-}
-
-async fn subcommand_summarize(subcommand_opts: SubcommandOpts) {
-    subcommand_handler(subcommand_opts, "summarize", &vec!["md", "txt"], true).await;
-}
-
-async fn subcommand_expand(subcommand_opts: SubcommandOpts) {
-    subcommand_handler(subcommand_opts, "expand", &vec!["md", "txt"], false).await;
-}
-
-async fn subcommand_debloat(subcommand_opts: SubcommandOpts) {
-    subcommand_handler(subcommand_opts, "debloat", &vec!["md", "txt"], false).await;
 }
 
 async fn subcommand_handler(subcommand_opts: SubcommandOpts, task: &str, extensions: &Vec<&str>, summarize: bool) {
