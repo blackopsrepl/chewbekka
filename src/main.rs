@@ -8,10 +8,12 @@ use chewbekka::extract::extract_files_recursive;
 
 use chewbekka::process_content;
 use chewbekka::write_md_file;
+use chewbekka::pre_tasks;
+use chewbekka::post_tasks;
 
 #[derive(Parser)]
 #[command(
-    version = "1.3.5",
+    version = "1.5.0",
     author = "Vittorio Distefano",
     about = "processes text file(s) at given path"
 )]
@@ -22,10 +24,7 @@ struct Opts {
 
 #[derive(Parser)]
 enum SubCommand {
-    #[clap(
-        name = "summarize",
-        about = "summarizes text file(s) at given path"
-    )]
+    #[clap(name = "summarize", about = "summarizes text file(s) at given path")]
     Summarize(SubcommandOpts),
 
     #[clap(
@@ -40,18 +39,15 @@ enum SubCommand {
     )]
     Debloat(SubcommandOpts),
 
-    #[clap(
-        name = "docugen",
-        about = "generates documentation for a codebase"
-    )]
+    #[clap(name = "docugen", about = "generates documentation for a codebase")]
     Docugen(SubcommandOpts),
 }
 
 #[derive(Parser)]
 struct SubcommandOpts {
     markdown_files: PathBuf,
-    #[clap(long, required = false, help = "output markdown file path")]
-    output_markdown: PathBuf,
+    #[clap(long, help = "output markdown file path")]
+    output_markdown: Option<PathBuf>,
 }
 
 #[tokio::main]
@@ -59,34 +55,38 @@ async fn main() {
     let args: Opts = Opts::parse();
     match args.subcmd {
         SubCommand::Summarize(summarize_opts) => {
-            subcommand_handler(summarize_opts, "summarize", &vec!["md", "txt"], true).await;
+            subcommand_handler(summarize_opts, "summarize", &vec!["md", "txt"]).await;
         }
         SubCommand::Expand(expand_opts) => {
-            subcommand_handler(expand_opts, "expand", &vec!["md", "txt"], false).await;
+            subcommand_handler(expand_opts, "expand", &vec!["md", "txt"]).await;
         }
         SubCommand::Debloat(debloat_opts) => {
-            subcommand_handler(debloat_opts, "debloat", &vec!["md", "txt"], false).await;
+            subcommand_handler(debloat_opts, "debloat", &vec!["md", "txt"]).await;
         }
         SubCommand::Docugen(docugen_opts) => {
-            subcommand_handler(docugen_opts, "docugen", &vec!["rs", "go", "py"], false).await;
+            subcommand_handler(docugen_opts, "docugen", &vec!["rs"]).await;
         }
     }
 }
 
-async fn subcommand_handler(subcommand_opts: SubcommandOpts, task: &str, extensions: &Vec<&str>, summarize: bool) {
+async fn subcommand_handler(subcommand_opts: SubcommandOpts, task: &str, extensions: &Vec<&str>) {
     let input_files = extract_files_recursive(&subcommand_opts.markdown_files, extensions).unwrap();
-
     let processed_files = Mutex::new(HashMap::new());
 
-    let input_files = input_files.lock().unwrap().clone();
-    
+    // pre-tasks
+    let input_files = pre_tasks(input_files, task).await.lock().unwrap().clone();
+
+    // process contents
     for (filename, content) in input_files.iter() {
         let processed_text = process_content(content, task).await;
         let mut processed_files = processed_files.lock().unwrap();
         processed_files.insert(filename.clone(), processed_text);
     }
 
-    let processed_files = processed_files.lock().unwrap().clone();
+    // post-tasks
+    let processed_files = post_tasks(processed_files, task).await.lock().unwrap().clone();
+
+    // console
     for (filename, processed_content) in processed_files.iter() {
         println!(
             "File: {}\n\nProcessed Content: {}\n\n",
@@ -94,13 +94,8 @@ async fn subcommand_handler(subcommand_opts: SubcommandOpts, task: &str, extensi
         );
     }
 
-    if subcommand_opts.output_markdown.exists() {
-        write_md_file(
-            &processed_files,
-            &subcommand_opts.output_markdown,
-            // TODO: refactor summarization to post_tasks system
-            summarize,
-        )
-        .await;
+    // write to md
+    if subcommand_opts.output_markdown.is_some() {
+        write_md_file(&processed_files, &subcommand_opts.output_markdown.unwrap()).await;
     }
 }
