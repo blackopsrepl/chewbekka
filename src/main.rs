@@ -13,7 +13,7 @@ use chewbekka::write_md_file;
 #[command(
     version = "1.4.0",
     author = "Vittorio Distefano",
-    about = "processes markdown file(s) at given path"
+    about = "processes text file(s) at given path"
 )]
 struct Opts {
     #[clap(subcommand)]
@@ -24,21 +24,27 @@ struct Opts {
 enum SubCommand {
     #[clap(
         name = "summarize",
-        about = "summarizes markdown file(s) at given path"
+        about = "summarizes text file(s) at given path"
     )]
     Summarize(SubcommandOpts),
 
     #[clap(
         name = "expand",
-        about = "analyzes all markdown file(s) at a given path as documentation for a task and generates a list of subtasks to be completed"
+        about = "analyzes all text file(s) at a given path as documentation for a task and generates a list of subtasks to be completed"
     )]
     Expand(SubcommandOpts),
 
     #[clap(
         name = "debloat",
-        about = "removes unnecessary lingo from markdown file(s) at given path"
+        about = "removes unnecessary lingo from text file(s) at given path"
     )]
     Debloat(SubcommandOpts),
+
+    #[clap(
+        name = "docugen",
+        about = "generates documentation for a codebase"
+    )]
+    Docugen(SubcommandOpts),
 }
 
 #[derive(Parser)]
@@ -60,6 +66,9 @@ async fn main() {
         }
         SubCommand::Debloat(debloat_opts) => {
             subcommand_handler(debloat_opts, "debloat", &vec!["md", "txt"], false).await;
+        }
+        SubCommand::Docugen(docugen_opts) => {
+            subcommand_handler(docugen_opts, "docugen", &vec!["rs", "go", "py"], false).await;
         }
     }
 }
