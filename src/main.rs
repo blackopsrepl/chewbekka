@@ -13,7 +13,7 @@ use chewbekka::post_tasks;
 
 #[derive(Parser)]
 #[command(
-    version = "1.3.5",
+    version = "1.5.0",
     author = "Vittorio Distefano",
     about = "processes text file(s) at given path"
 )]
