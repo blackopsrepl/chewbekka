@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.5.0](///compare/v1.4.0...v1.5.0) (2025-04-04)
+
+
+### Features
+
+* **extract:** Add support for multiple file extensions 7d1601f
+* **lib:** Add functions for pre and post tasks fb24cc7
+* **main:** Add pre-tasks and post-tasks to subcommand_handler 49f6b74
+* **prompts:** Update GENERATE_README prompt a24c043
+
 ## [1.4.0](///compare/v1.3.4...v1.4.0) (2025-04-04)
 
 
