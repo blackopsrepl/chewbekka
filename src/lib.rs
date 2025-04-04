@@ -2,10 +2,10 @@ pub mod async_wrapper;
 pub mod extract;
 pub mod prompts;
 
-use std::{collections::HashMap, path::PathBuf};
-use std::sync::Mutex;
 use async_wrapper::chat_completion;
 use prompts::get_prompt;
+use std::sync::Mutex;
+use std::{collections::HashMap, path::PathBuf};
 
 pub async fn write_md_file(input_files: &HashMap<String, String>, output_file: &PathBuf) {
     let concatenated_output = concatenate_files(input_files);
@@ -26,9 +26,7 @@ pub async fn pre_tasks(
                 .insert("concatenated".to_string(), input_files);
             output_files
         }
-        _ => {
-            input_files
-        }
+        _ => input_files,
     }
 }
 
@@ -41,12 +39,13 @@ pub async fn post_tasks(
             let output_files = Mutex::new(HashMap::new());
             let summary = &input_files.lock().unwrap().clone();
             let summary = summarize_files_across(summary).await;
-            output_files.lock().unwrap().insert("summary".to_string(), summary);
+            output_files
+                .lock()
+                .unwrap()
+                .insert("summary".to_string(), summary);
             output_files
         }
-        _ => {
-            input_files
-        }
+        _ => input_files,
     }
 }
 
@@ -81,8 +80,8 @@ pub async fn process_content(content: &str, task: &str) -> String {
             }
             "No valid output in the response".to_string()
         }
-        
-        Err(e) => "Error occurred during process\n\n".to_string() + &e.to_string()
+
+        Err(e) => "Error occurred during process\n\n".to_string() + &e.to_string(),
     }
 }
 

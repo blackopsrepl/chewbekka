@@ -6,10 +6,10 @@ use std::sync::Mutex;
 
 use chewbekka::extract::extract_files_recursive;
 
+use chewbekka::post_tasks;
+use chewbekka::pre_tasks;
 use chewbekka::process_content;
 use chewbekka::write_md_file;
-use chewbekka::pre_tasks;
-use chewbekka::post_tasks;
 
 #[derive(Parser)]
 #[command(
@@ -84,7 +84,11 @@ async fn subcommand_handler(subcommand_opts: SubcommandOpts, task: &str, extensi
     }
 
     // post-tasks
-    let processed_files = post_tasks(processed_files, task).await.lock().unwrap().clone();
+    let processed_files = post_tasks(processed_files, task)
+        .await
+        .lock()
+        .unwrap()
+        .clone();
 
     // console
     for (filename, processed_content) in processed_files.iter() {
