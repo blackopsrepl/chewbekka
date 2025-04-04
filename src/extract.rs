@@ -96,7 +96,7 @@ fn extract_files_common(
                 }
                 (false, _) => {
                     if let Some(ext) = path.extension() {
-                        if ext == "md" {
+                        if extensions.contains(&ext.to_str().unwrap()) {
                             let file_size = entry.metadata()?.len();
 
                             if file_size > MAX_FILE_SIZE {
@@ -127,14 +127,14 @@ fn extract_files_common(
 
 pub fn extract_files_recursive(
     dir: &PathBuf,
-    extensions: &Vec<&str>
+    extensions: &Vec<&str>,
 ) -> io::Result<Mutex<HashMap<String, String>>> {
     extract_files_common(dir, extensions, true)
 }
 
 pub fn extract_files_non_recursive(
     dir: &PathBuf,
-    extensions: &Vec<&str>
+    extensions: &Vec<&str>,
 ) -> io::Result<Mutex<HashMap<String, String>>> {
     extract_files_common(dir, extensions, false)
 }
